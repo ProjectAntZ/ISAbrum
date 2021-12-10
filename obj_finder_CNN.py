@@ -12,9 +12,10 @@ MODEL_PATH = "modelCNN"
 
 def load_model(path):
     model = tf.keras.models.load_model(path)
+    model.summary()
 
-    last_conv = model.layers[-8].output
-    gp = model.layers[-5].output
+    last_conv = model.layers[-5].output
+    gp = model.layers[-3].output
     print(last_conv)
     print(gp)
 

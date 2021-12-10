@@ -21,23 +21,22 @@ def create_model():
     x = tf.keras.layers.Rescaling(1. / 255)(x)
     # x = tf.keras.layers.LayerNormalization(axis=3)(x)
 
-    size = [16, 32, 64]
+    size = [8, 16]
     for i, s in enumerate(size):
         for _ in range(1):
             x = tf.keras.layers.Conv2D(filters=s, kernel_size=(3, 3), padding='same', activation='relu')(x)
-
-        x = tf.keras.layers.GaussianDropout(1. / 4)(x)
-        x = tf.keras.layers.BatchNormalization()(x)
+            x = tf.keras.layers.BatchNormalization()(x)
+            # x = tf.keras.layers.GaussianDropout(1. / 8)(x)
         if i != len(size)-1:
-            x = tf.keras.layers.SpatialDropout2D(1. / 2)(x)
+            # x = tf.keras.layers.SpatialDropout2D(1. / 4)(x)
             x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(x)
 
     x = tf.keras.layers.GlobalMaxPooling2D()(x)
-    x = tf.keras.layers.Dropout(1. / 2)(x)
+    '''x = tf.keras.layers.Dropout(1. / 4)(x)
     x = tf.keras.layers.Dense(
         units=size[-1],
         activation='relu',
-    )(x)
+    )(x)'''
     x = tf.keras.layers.Dropout(1. / 2)(x)
     x = tf.keras.layers.Dense(
         units=1,
@@ -111,6 +110,6 @@ if __name__ == '__main__':
         x=train,
         # steps_per_epoch=1000,
         validation_data=test,
-        epochs=10,
+        epochs=20,
         callbacks=[checkpoint]
     )
