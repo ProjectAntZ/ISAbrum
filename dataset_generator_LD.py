@@ -101,6 +101,9 @@ class LDDetectionDatasetGenerator(tf.keras.utils.Sequence):
         scaling = (random.uniform(0.9, 1.1), random.uniform(0.9, 1.1), random.uniform(0.9, 1.1))
 
         obj_img_copy = _transform_object(obj_img_copy, rotation, scaling)
+        kernel = np.ones((3, 3), np.uint8)
+        obj_img_copy[:, :, 3] = cv2.erode(obj_img_copy[:, :, 3], kernel, iterations=1)
+
         random_image, ld = _add_object_to_image(obj=obj_img_copy, img=random_image, scale=self.scale)
         random_image = _add_noises(img=random_image, brightness=self.brightness, contrast=self.contrast)
         '''elif index % 5 == 1:

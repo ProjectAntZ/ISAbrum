@@ -119,6 +119,9 @@ class ObjectDetectionDatasetGenerator(tf.keras.utils.Sequence):
 
             obj_img_copy = _transform_object(obj_img_copy, rotation, scaling)
 
+            kernel = np.ones((3, 3), np.uint8)
+            obj_img_copy[:, :, 3] = cv2.erode(obj_img_copy[:, :, 3], kernel, iterations=1)
+
             random_image = _add_object_to_image(obj=obj_img_copy, img=random_image, scale=self.scale)
 
             if random.randint(0, 1) == 1:

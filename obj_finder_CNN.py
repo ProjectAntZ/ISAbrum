@@ -14,8 +14,8 @@ def load_model(path):
     model = tf.keras.models.load_model(path)
     model.summary()
 
-    last_conv = model.layers[-5].output
-    gp = model.layers[-3].output
+    last_conv = model.layers[-6].output
+    gp = model.layers[-5].output
     print(last_conv)
     print(gp)
 
@@ -37,13 +37,28 @@ def load_model(path):
     return model
 
 
-frameResolution = (320, 240)
+class ObjFinder:
+    def __init__(self, model_path):
+        self.model = load_model(model_path)
+        self.input_shape = tuple(reversed(self.model.input.shape[1:3]))
+
+    def get_objs(self, img):
+        img = cv2.resize(img, self.input_shape)
+        cv2.imshow("img", img)
+        p = self.model.predict(np.expand_dims(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), axis=0))
+        print(int(p[0][0]*100.0))
+        roi = p[1][0]
+        # roi = np.multiply(roi, p[2][0])
+        roi = np.sum(roi, axis=2)
+        roi = roi/np.amax(roi)*255.0
+        return roi
+
 
 if __name__ == '__main__':
     # vs = JetsonVideoStream(outputResolution=frameResolution)
     # vs.start()
     # time.sleep(2.0)
-    model = load_model(MODEL_PATH)
+    finder = ObjFinder(MODEL_PATH)
     # print(model.layers[-2].get_weights())
 
     cam = cv2.VideoCapture(0)
@@ -52,18 +67,8 @@ if __name__ == '__main__':
     while True:
         # frame = vs.read()
         _, frame = cam.read()
-        frame = cv2.resize(frame, frameResolution)
-        # frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-        p = model.predict(np.expand_dims(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), axis=0))
-        cv2.imshow("video", frame)
-
-        roi = p[1][0]
-        roi = np.multiply(roi, p[2][0])
-        roi = np.sum(roi, axis=2)
-        roi = roi/np.amax(roi)*255.0
-        roi = cv2.resize(roi.astype('uint8'), (frame.shape[1], frame.shape[0]))
-        cv2.imshow("roi", roi)
-        print(p[0][0]*100)
+        roi = finder.get_objs(frame)
+        cv2.imshow("roi", cv2.resize(roi, finder.input_shape))
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):

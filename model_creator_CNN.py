@@ -21,23 +21,39 @@ def create_model():
     x = tf.keras.layers.Rescaling(1. / 255)(x)
     # x = tf.keras.layers.LayerNormalization(axis=3)(x)
 
-    size = [8, 16]
+    size = [3, 2]
+    for i, s in enumerate(size):
+        for _ in range(1):
+            x = tf.keras.layers.DepthwiseConv2D(depth_multiplier=s, kernel_size=(3, 3), padding='same', activation='relu')(x)
+            x = tf.keras.layers.BatchNormalization()(x)
+            # x = tf.keras.layers.GaussianDropout(1. / 8)(x)
+        if i != len(size)-1:
+            # x = tf.keras.layers.SpatialDropout2D(1. / 8)(x)
+            x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(x)
+
+    x = tf.keras.layers.Conv2D(filters=32, kernel_size=(3, 3), padding='same', activation='relu')(x)
+    # x = tf.keras.layers.GaussianDropout(1. / 8)(x)
+
+    '''x = input = tf.keras.layers.Input(shape=frameResolution + (3,))
+    x = tf.keras.layers.Rescaling(1. / 255)(x)
+
+    size = [32, 64, 128, 256]
     for i, s in enumerate(size):
         for _ in range(1):
             x = tf.keras.layers.Conv2D(filters=s, kernel_size=(3, 3), padding='same', activation='relu')(x)
             x = tf.keras.layers.BatchNormalization()(x)
-            # x = tf.keras.layers.GaussianDropout(1. / 8)(x)
-        if i != len(size)-1:
-            # x = tf.keras.layers.SpatialDropout2D(1. / 4)(x)
-            x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(x)
+            x = tf.keras.layers.GaussianDropout(1. / 8)(x)
+            if i != len(size)-1:
+                x = tf.keras.layers.SpatialDropout2D(1. / 4)(x)
+                x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(x)'''
 
-    x = tf.keras.layers.GlobalMaxPooling2D()(x)
-    '''x = tf.keras.layers.Dropout(1. / 4)(x)
-    x = tf.keras.layers.Dense(
-        units=size[-1],
-        activation='relu',
-    )(x)'''
+    x = tf.keras.layers.GlobalAveragePooling2D()(x)
     x = tf.keras.layers.Dropout(1. / 2)(x)
+    x = tf.keras.layers.Dense(
+        units=32,
+        activation='relu',
+    )(x)
+    x = tf.keras.layers.Dropout(1. / 4)(x)
     x = tf.keras.layers.Dense(
         units=1,
         activation='sigmoid',
