@@ -19,7 +19,7 @@ def dataset_thread(dir_list, index):
     batch_size=2
 
     gen = ObjectDetectionDatasetGenerator(
-        obj_path="obj.png",
+        obj_path="./objs",
         source_path=SOURCE_PATH,
         batch_size=batch_size,
         img_size=frameResolution,
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     source_list = np.array(source_list).repeat(2).tolist()
 
     # slice_size = int(len(source_list)/(n_p*4))
-    slice_size = 750
+    slice_size = 1000
 
     processes = []
     for n in range(n_p):

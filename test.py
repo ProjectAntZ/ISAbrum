@@ -1,6 +1,4 @@
-import numpy as np
+import random
 
-l = [1,2,3]
-print(l)
-l.pop()
-print(l)
+for i in range(10):
+    print(random.randint(0, 1))

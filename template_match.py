@@ -6,7 +6,7 @@ from image_transformer import add_RGBA2RGB
 
 cam = cv2.VideoCapture(0)
 
-template = cv2.imread('obj.png', flags=cv2.IMREAD_UNCHANGED)
+template = cv2.imread('objs/obj.png', flags=cv2.IMREAD_UNCHANGED)
 noise = np.random.normal(0,1,template.shape[:2] + (3,)).astype('uint8')
 
 template, _ = add_RGBA2RGB(rgb=noise, rgba=template)

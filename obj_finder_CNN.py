@@ -14,7 +14,7 @@ def load_model(path):
     model = tf.keras.models.load_model(path)
     model.summary()
 
-    last_conv = model.layers[-6].output
+    last_conv = model.layers[-7].output
     gp = model.layers[-5].output
     print(last_conv)
     print(gp)
@@ -46,12 +46,19 @@ class ObjFinder:
         img = cv2.resize(img, self.input_shape)
         cv2.imshow("img", img)
         p = self.model.predict(np.expand_dims(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), axis=0))
-        print(int(p[0][0]*100.0))
+        print(int(p[0][0] * 100.0))
         roi = p[1][0]
+        for i in range(roi.shape[2]):
+            roi[:, :, i] -= np.amin(roi[:, :, i])
+            roi[:, :, i] /= np.amax(roi[:, :, i])
+            '''cv2.imwrite("test/roi" + str(i) + ".jpg",
+                        (roi[:, :, i] * 255.0).astype('uint8')
+                        )'''
+
         # roi = np.multiply(roi, p[2][0])
         roi = np.sum(roi, axis=2)
-        roi = roi/np.amax(roi)*255.0
-        return roi
+        roi = roi / np.amax(roi) * 255.0
+        return roi.astype('uint8')
 
 
 if __name__ == '__main__':

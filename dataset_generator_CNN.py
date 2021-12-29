@@ -51,10 +51,14 @@ def _resize_prop(img, size):
 
 class ObjectDetectionDatasetGenerator(tf.keras.utils.Sequence):
     def __init__(self, obj_path, source_path, img_size, batch_size=2, n_images=None, log_path=None, dir_list=None):
-        self.obj_img = cv2.imread(filename=obj_path, flags=cv2.IMREAD_UNCHANGED)
-        new_heigth = img_size[0]
-        new_width = int(img_size[1] * self.obj_img.shape[1] / self.obj_img.shape[0])
-        self.obj_img = cv2.resize(self.obj_img, (new_width, new_heigth))
+        obj_img_dir = [p for p in os.listdir(obj_path) if p.split('.')[-1] == "png"]
+
+        self.obj_img = [cv2.imread(filename=os.path.join(obj_path, img_name), flags=cv2.IMREAD_UNCHANGED) for img_name in obj_img_dir]
+
+        new_height = img_size[0]
+        for i, img in enumerate(self.obj_img):
+            new_width = int(img_size[1] * img.shape[1] / img.shape[0])
+            self.obj_img[i] = cv2.resize(img, (new_width, new_height))
 
         self.source_path = source_path
 
@@ -112,7 +116,7 @@ class ObjectDetectionDatasetGenerator(tf.keras.utils.Sequence):
 
         if index % self.labels_dev == 1:
             label = 1
-            obj_img_copy = self.obj_img.copy()
+            obj_img_copy = self.obj_img[random.randint(0, len(self.obj_img) - 1)].copy()
 
             rotation = (random.randint(-5, 5), random.randint(-5, 5), random.randint(-15, 15))
             scaling = (random.uniform(0.9, 1.1), random.uniform(0.9, 1.1), random.uniform(0.9, 1.1))

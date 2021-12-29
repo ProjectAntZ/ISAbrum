@@ -17,7 +17,7 @@ TARGET_PATH_Y = os.path.join(TARGET_PATH, "y")
 
 def dataset_thread(dir_list, index):
     gen = LDDetectionDatasetGenerator(
-        obj_path="obj.png",
+        obj_path="objs/obj.png",
         source_path=SOURCE_PATH,
         img_size=frameResolution,
         dir_list=dir_list
