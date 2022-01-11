@@ -31,8 +31,8 @@ def _add_object_to_image(obj, img, scale=(0.0, 1.0)):
     return img.astype('uint8')
 
 
-def _add_noises(img, contrast, brightness):
-    for i in random.sample(range(4), 4):
+def _add_noises(img, contrast, brightness, balance):
+    for i in random.sample(range(5), 5):
         if i == 0:
             img = cv2.blur(img, (random.randint(1, 2), random.randint(1, 2)))
         elif i == 1:
@@ -41,6 +41,8 @@ def _add_noises(img, contrast, brightness):
             img = it.random_contrast(image=img, a=contrast[0], b=contrast[1])
         elif i == 3:
             img = it.random_brightness(image=img, a=brightness[0], b=brightness[1])
+        elif i == 4:
+            img = it.random_color_balance(image=img, a=balance[0], b=balance[1])
 
     return img.astype('uint8')
 
@@ -78,9 +80,10 @@ class ObjectDetectionDatasetGenerator(tf.keras.utils.Sequence):
 
         self.img_size = img_size
         self.labels_dev = 2
-        self.contrast = (0.6, 1.2)
-        self.brightness = (0.7, 1.2)
-        self.scale = (0.4, 0.7)
+        self.contrast = (0.8, 1.2)
+        self.brightness = (0.8, 1.2)
+        self.scale = (0.3, 0.7)
+        self.balance = (0.8, 1.2)
 
         self.log_path = log_path
 
@@ -93,18 +96,12 @@ class ObjectDetectionDatasetGenerator(tf.keras.utils.Sequence):
 
         for count, i in enumerate(range(index * self.batch_size, (index + 1) * self.batch_size, 1)):
             img = cv2.imread(os.path.join(self.source_path, self.source_images_names[i]))
+
             img = cv2.resize(img, self.img_size)
 
-            target_x, target_y = self._next(img, i)
-
-            y.append([target_y])
-            x.append(target_x)
-
-        offset = index * self.batch_size
-        if self.log_path is not None:
-            for i in range(self.labels_dev):
-                path = os.path.join(self.log_path, str(y[i]) + "_" + self.source_images_names[offset + i])
-                cv2.imwrite(path, x[i])
+            img, label = self._next(img, i)
+            x.append(img)
+            y.append(label)
 
         return x, y
 
@@ -118,7 +115,7 @@ class ObjectDetectionDatasetGenerator(tf.keras.utils.Sequence):
             label = 1
             obj_img_copy = self.obj_img[random.randint(0, len(self.obj_img) - 1)].copy()
 
-            rotation = (random.randint(-5, 5), random.randint(-5, 5), random.randint(-15, 15))
+            rotation = (random.randint(-10, 10), random.randint(-10, 10), random.randint(-20, 20))
             scaling = (random.uniform(0.9, 1.1), random.uniform(0.9, 1.1), random.uniform(0.9, 1.1))
 
             obj_img_copy = _transform_object(obj_img_copy, rotation, scaling)
@@ -145,5 +142,10 @@ class ObjectDetectionDatasetGenerator(tf.keras.utils.Sequence):
             obj_img_copy = _transform_object(obj_img_copy, rotation, scaling)
             random_image = _add_object_to_image(obj=obj_img_copy, img=random_image, scale=self.scale)'''
 
-        random_image = _add_noises(img=random_image, brightness=self.brightness, contrast=self.contrast)
-        return random_image, label
+        random_image = _add_noises(
+            img=random_image,
+            brightness=self.brightness,
+            contrast=self.contrast,
+            balance=self.balance
+        )
+        return random_image, [label]

@@ -4,6 +4,16 @@ from cv2 import cv2
 import numpy as np
 
 
+def random_color_balance(image, a, b):
+    balance = random.uniform(a, b)
+    image2 = np.zeros(image.shape)
+    image2[:,:,0] = ((1 + 2*balance)*image[:,:,0] + (1 - balance)*image[:,:,1] + (1 - balance)*image[:,:,2])/3
+    image2[:,:,1] = ((1 + 2*balance)*image[:,:,1] + (1 - balance)*image[:,:,0] + (1 - balance)*image[:,:,2])/3
+    image2[:,:,2] = ((1 + 2*balance)*image[:,:,2] + (1 - balance)*image[:,:,0] + (1 - balance)*image[:,:,1])/3
+    image2 = image2.astype('uint8')
+    return image2
+
+
 def add_gaussian_noise(image, f):
     image = image + np.random.normal(0, 255 * f, image.shape)
     image = cv2.normalize(image, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)

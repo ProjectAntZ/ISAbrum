@@ -16,7 +16,7 @@ TARGET_PATH_1 = os.path.join(TARGET_PATH, "1")
 
 
 def dataset_thread(dir_list, index):
-    batch_size=2
+    batch_size = 2
 
     gen = ObjectDetectionDatasetGenerator(
         obj_path="./objs",
@@ -47,10 +47,11 @@ if __name__ == '__main__':
 
     n_p = 6
     source_list = os.listdir(SOURCE_PATH)
-    source_list = np.array(source_list).repeat(2).tolist()
+    # source_list = np.array(source_list).repeat(2).tolist()
 
     # slice_size = int(len(source_list)/(n_p*4))
     slice_size = 1000
+    # dataset_thread(source_list[:slice_size], 1)
 
     processes = []
     for n in range(n_p):
