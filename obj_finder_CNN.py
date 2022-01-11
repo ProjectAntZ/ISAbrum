@@ -42,23 +42,26 @@ class ObjFinder:
         self.model = load_model(model_path)
         self.input_shape = tuple(reversed(self.model.input.shape[1:3]))
 
-    def get_objs(self, img):
-        img = cv2.resize(img, self.input_shape)
-        cv2.imshow("img", img)
-        p = self.model.predict(np.expand_dims(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), axis=0))
-        print(int(p[0][0] * 100.0))
-        roi = p[1][0]
-        for i in range(roi.shape[2]):
-            roi[:, :, i] -= np.amin(roi[:, :, i])
-            roi[:, :, i] /= np.amax(roi[:, :, i])
-            '''cv2.imwrite("test/roi" + str(i) + ".jpg",
-                        (roi[:, :, i] * 255.0).astype('uint8')
-                        )'''
+    def get_fmap(self, maps):
+        for i in range(maps.shape[2]):
+            maps[:, :, i] -= np.amin(maps[:, :, i])
+            if np.amax(maps[:, :, i]) != 0:
+                maps[:, :, i] /= np.amax(maps[:, :, i])
 
         # roi = np.multiply(roi, p[2][0])
-        roi = np.sum(roi, axis=2)
-        roi = roi / np.amax(roi) * 255.0
-        return roi.astype('uint8')
+        maps = np.sum(maps, axis=2)
+        maps = maps / np.amax(maps) * 255.0
+        return maps.astype('uint8')
+
+    def get_bboxes(self, fmap):
+        boxes = []
+        fmap = cv2.threshold(fmap, 100, 255, cv2.THRESH_BINARY)[1]
+        num_labels, labels = cv2.connectedComponents(fmap)
+        for l in range(num_labels):
+            contours = cv2.findContours((labels == l).astype('uint8') * 255, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0][0]
+            boxes.append(cv2.boundingRect(contours))
+
+        return boxes
 
 
 if __name__ == '__main__':
@@ -74,8 +77,17 @@ if __name__ == '__main__':
     while True:
         # frame = vs.read()
         _, frame = cam.read()
-        roi = finder.get_objs(frame)
-        cv2.imshow("roi", cv2.resize(roi, finder.input_shape))
+        frame = cv2.resize(frame, finder.input_shape)
+        # cv2.imshow("img", img)
+        p = finder.model.predict(np.expand_dims(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), axis=0))
+        print(int(p[0][0][0] * 100.0))
+        fmap = finder.get_fmap(p[1][0])
+        fmap = cv2.resize(fmap, finder.input_shape)
+        bboxes = finder.get_bboxes(fmap)
+        for box in bboxes:
+            frame = cv2.rectangle(frame, (box[0], box[1]), (box[0] + box[2], box[1] + box[3]), (255, 0, 0), 2)
+
+        cv2.imshow("roi", frame)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
