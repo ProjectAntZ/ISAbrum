@@ -78,7 +78,7 @@ if __name__ == '__main__':
         # frame = vs.read()
         _, frame = cam.read()
         frame = cv2.resize(frame, finder.input_shape)
-        # cv2.imshow("img", img)
+
         p = finder.model.predict(np.expand_dims(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), axis=0))
         print(int(p[0][0][0] * 100.0))
         fmap = finder.get_fmap(p[1][0])
