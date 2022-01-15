@@ -3,3 +3,5 @@ modelLD
 .idea
 __pycache__
 test
+.pio
+desktop.ini
