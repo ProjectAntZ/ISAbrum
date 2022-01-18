@@ -4,7 +4,6 @@
 #include "NERFTrigger.hpp"
 #include <NewPing.h>
 #include <Encoder.h>
-#include "ISAMobile.h"
 #include <Axle.hpp>
 #include "Sonars.hpp"
 
@@ -107,24 +106,27 @@ String msg;
 void loop()
 {
     if(Serial.available()!=0) {
-        msg = Serial.readString();
+        msg = Serial.readStringUntil('\n');
 
-        if(msg.indexOf("shoot")!=-1) {
+        Serial.println(msg);
+
+        if(msg == "shoot") {
             trigger.shoot();
         }
-        if(msg.indexOf("reload")!=-1) {
+        else if(msg == "reload") {
             trigger.reload();
         }
-        Serial.flush();
+
+        // if(msg.indexOf("shoot")!=-1) {
+        //     trigger.shoot();
+        // }
+        // else if(msg.indexOf("reload")!=-1) {
+        //     trigger.reload();
+        // }
+        // Serial.flush();
     }
     
     sonars.update();
-    if (sonars.getShortestDistance() < 40) turn(100);
+    if (sonars.getShortestDistance() < 30) turn(100);
     else if (sonars.getShortestDistance() > 50) forward(70);
 }
-
-
-
-
-
-
