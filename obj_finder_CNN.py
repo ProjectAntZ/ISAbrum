@@ -93,7 +93,7 @@ if __name__ == '__main__':
         cv2.imshow("frame", frame)
         bboxes = finder.get_bboxes(fmap)
         for box in bboxes:
-            frame = cv2.rectangle(frame, (box[0], box[1]), (box[0] + box[2], box[1] + box[3]), (255, 0, 0), 2)
+            frame = cv2.rectangle(frame, (box[2], box[0]), (box[3], box[1]), (255, 0, 0), 2)
 
         cv2.imshow("roi", frame)
 
