@@ -24,14 +24,14 @@ def create_model():
 
     size = [16, 32, 64, 128]
     for s in size:
-        for _ in range(1):
-            x = layers.Conv2D(s, kernel_size=(5, 5), strides=(1, 1), padding='same', activation='relu')(x)
+        for _ in range(2):
+            x = layers.Conv2D(s, kernel_size=(3, 3), strides=(1, 1), padding='same', activation='relu')(x)
         x = layers.BatchNormalization()(x)
-        # x = tf.keras.layers.GaussianNoise(1. / 16)(x)
+        x = tf.keras.layers.GaussianNoise(1. / 8)(x)
         if s != size[-1]:
             x = layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(x)
 
-    x = tf.keras.layers.Conv2D(1, kernel_size=(1, 1), strides=(1, 1), padding='same')(x)
+    x = layers.Conv2D(1, kernel_size=(3, 3), strides=(1, 1), padding='same', activation='sigmoid')(x)
 
     output = x
     model = tf.keras.Model(inputs=input, outputs=output, name="Hunter")
@@ -84,6 +84,6 @@ if __name__ == '__main__':
     model.fit(
         x=train,
         validation_data=test,
-        epochs=20,
+        epochs=25,
         callbacks=[checkpoint]
     )

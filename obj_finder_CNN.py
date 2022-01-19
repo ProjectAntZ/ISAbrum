@@ -14,8 +14,8 @@ def load_model(path):
     model = tf.keras.models.load_model(path)
     model.summary()
 
-    last_conv = model.layers[-7].output
-    gp = model.layers[-5].output
+    last_conv = model.layers[-5].output
+    gp = model.layers[-3].output
     print(last_conv)
     print(gp)
 
@@ -37,6 +37,12 @@ def load_model(path):
     return model
 
 
+def get_bbox(image):
+    a = np.where(image != 0)
+    bbox = np.min(a[0]), np.max(a[0]), np.min(a[1]), np.max(a[1])
+    return bbox
+
+
 class ObjFinder:
     def __init__(self, model_path):
         self.model = load_model(model_path)
@@ -55,11 +61,10 @@ class ObjFinder:
 
     def get_bboxes(self, fmap):
         boxes = []
-        fmap = cv2.threshold(fmap, 100, 255, cv2.THRESH_BINARY)[1]
         num_labels, labels = cv2.connectedComponents(fmap)
         for l in range(num_labels):
-            contours = cv2.findContours((labels == l).astype('uint8') * 255, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0][0]
-            boxes.append(cv2.boundingRect(contours))
+            bbox = get_bbox((labels == l).astype('uint8'))
+            boxes.append(bbox)
 
         return boxes
 
@@ -82,7 +87,10 @@ if __name__ == '__main__':
         p = finder.model.predict(np.expand_dims(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), axis=0))
         print(int(p[0][0][0] * 100.0))
         fmap = finder.get_fmap(p[1][0])
-        fmap = cv2.resize(fmap, finder.input_shape)
+        fmap = cv2.resize(fmap, finder.input_shape, interpolation=cv2.INTER_NEAREST)
+        fmap = cv2.threshold(fmap, 100, 255, cv2.THRESH_BINARY)[1]
+        cv2.imshow("fmap", fmap)
+        cv2.imshow("frame", frame)
         bboxes = finder.get_bboxes(fmap)
         for box in bboxes:
             frame = cv2.rectangle(frame, (box[0], box[1]), (box[0] + box[2], box[1] + box[3]), (255, 0, 0), 2)

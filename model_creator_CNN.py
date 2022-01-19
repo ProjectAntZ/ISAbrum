@@ -33,8 +33,6 @@ def create_model():
             x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(x)
             x = tf.keras.layers.GaussianDropout(1. / 8)(x)
 
-    # x = tf.keras.layers.GaussianDropout(1. / 8)(x)
-
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
     '''x = tf.keras.layers.Dropout(1. / 2)(x)
     x = tf.keras.layers.Dense(
