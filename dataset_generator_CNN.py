@@ -34,7 +34,7 @@ def _add_object_to_image(obj, img, scale=(0.0, 1.0)):
 def _add_noises(img, contrast, brightness, balance):
     for i in random.sample(range(5), 5):
         if i == 0:
-            img = cv2.blur(img, (random.randint(1, 2), random.randint(1, 2)))
+            img = cv2.blur(img, (random.randint(1, 3), random.randint(1, 3)))
         elif i == 1:
             img = it.add_gaussian_noise(img, random.uniform(0.01, 0.1))
         elif i == 2:
