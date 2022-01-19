@@ -82,7 +82,7 @@ class ObjectDetectionDatasetGenerator(tf.keras.utils.Sequence):
         self.labels_dev = 2
         self.contrast = (0.8, 1.2)
         self.brightness = (0.8, 1.2)
-        self.scale = (0.3, 0.7)
+        self.scale = (0.3, 0.8)
         self.balance = (0.8, 1.2)
 
         self.log_path = log_path
@@ -116,7 +116,7 @@ class ObjectDetectionDatasetGenerator(tf.keras.utils.Sequence):
             obj_img_copy = self.obj_img[random.randint(0, len(self.obj_img) - 1)].copy()
 
             rotation = (random.randint(-10, 10), random.randint(-10, 10), random.randint(-20, 20))
-            scaling = (random.uniform(0.9, 1.1), random.uniform(0.9, 1.1), random.uniform(0.9, 1.1))
+            scaling = (random.uniform(0.9, 1.2), random.uniform(0.9, 1.2), random.uniform(0.9, 1.2))
 
             obj_img_copy = _transform_object(obj_img_copy, rotation, scaling)
 

@@ -53,10 +53,15 @@ def _resize_prop(img, size):
 
 class LDDetectionDatasetGenerator(tf.keras.utils.Sequence):
     def __init__(self, obj_path, source_path,  img_size, batch_size=2, n_images=None, dir_list=None):
-        self.obj_img = cv2.imread(filename=obj_path, flags=cv2.IMREAD_UNCHANGED)
-        new_heigth = img_size[0]
-        new_width = int(img_size[1] * self.obj_img.shape[1] / self.obj_img.shape[0])
-        self.obj_img = cv2.resize(self.obj_img, (new_width, new_heigth))
+        obj_img_dir = [p for p in os.listdir(obj_path) if p.split('.')[-1] == "png"]
+
+        self.obj_img = [cv2.imread(filename=os.path.join(obj_path, img_name), flags=cv2.IMREAD_UNCHANGED) for img_name
+                        in obj_img_dir]
+
+        new_height = img_size[0]
+        for i, img in enumerate(self.obj_img):
+            new_width = int(img_size[1] * img.shape[1] / img.shape[0])
+            self.obj_img[i] = cv2.resize(img, (new_width, new_height))
 
         self.source_path = source_path
 
@@ -76,9 +81,9 @@ class LDDetectionDatasetGenerator(tf.keras.utils.Sequence):
 
         self.img_size = img_size
         self.labels_dev = 2
-        self.contrast = (0.6, 1.2)
-        self.brightness = (0.8, 1.2)
-        self.scale = (0.4, 0.7)
+        self.contrast = (0.7, 1.2)
+        self.brightness = (0.7, 1.2)
+        self.scale = (0.4, 0.8)
 
     def __len__(self):
         return int(math.floor(len(self.source_images_names) / self.batch_size))
@@ -95,10 +100,10 @@ class LDDetectionDatasetGenerator(tf.keras.utils.Sequence):
         random.shuffle(self.source_images_names)
 
     def _next(self, random_image, index):
-        obj_img_copy = self.obj_img.copy()
+        obj_img_copy = self.obj_img[random.randint(0, len(self.obj_img) - 1)].copy()
 
-        rotation = (random.randint(-5, 5), random.randint(-5, 5), random.randint(-15, 15))
-        scaling = (random.uniform(0.9, 1.1), random.uniform(0.9, 1.1), random.uniform(0.9, 1.1))
+        rotation = (random.randint(-10, 10), random.randint(-10, 10), random.randint(-20, 20))
+        scaling = (random.uniform(0.9, 1.2), random.uniform(0.9, 1.2), random.uniform(0.9, 1.2))
 
         obj_img_copy = _transform_object(obj_img_copy, rotation, scaling)
         kernel = np.ones((3, 3), np.uint8)
@@ -123,17 +128,19 @@ class LDDetectionDatasetGenerator(tf.keras.utils.Sequence):
         return random_image, ld
 
 
-def get_splitted_getters(source_path, split, input_shape, output_shape):
-    train = LDDetectionDatasetGetter(source_path, input_shape, output_shape, split=split)
-    test = LDDetectionDatasetGetter(source_path, input_shape, output_shape, split=1-split)
+def get_splitted_getters(source_path, split, input_shape, output_shape, batch_size):
+    train = LDDetectionDatasetGetter(source_path, input_shape, output_shape, split=split, batch_size=batch_size)
+    test = LDDetectionDatasetGetter(source_path, input_shape, output_shape, split=1-split, batch_size=batch_size)
     return train, test
 
 
 class LDDetectionDatasetGetter(tf.keras.utils.Sequence):
-    def __init__(self, source_path, input_shape, output_shape, n_images=None, dir_list=None, split=None):
+    def __init__(self, source_path, input_shape, output_shape, batch_size, n_images=None, dir_list=None, split=None):
         self.source_path = source_path
         self.source_path_x = os.path.join(self.source_path, "x")
         self.source_path_y = os.path.join(self.source_path, "y")
+
+        self.batch_size = batch_size
 
         if dir_list is not None:
             self.source_images_names = dir_list
@@ -149,18 +156,25 @@ class LDDetectionDatasetGetter(tf.keras.utils.Sequence):
         self.output_shape = output_shape
 
     def __len__(self):
-        return int(len(self.source_images_names))
+        return len(self.source_images_names) // self.batch_size
 
     def __getitem__(self, index):
-        x_img = cv2.imread(os.path.join(self.source_path_x, self.source_images_names[index]))
-        y_img = cv2.imread(os.path.join(self.source_path_y, self.source_images_names[index]), cv2.IMREAD_GRAYSCALE)
+        x = []
+        y = []
 
-        x_img = cv2.resize(x_img, tuple(reversed(self.input_shape[:2])))
-        y_img = cv2.resize(y_img, tuple(reversed(self.output_shape[:2])))
+        for count, i in enumerate(range(index * self.batch_size, (index + 1) * self.batch_size, 1)):
+            x_img = cv2.imread(os.path.join(self.source_path_x, self.source_images_names[i]))
+            y_img = cv2.imread(os.path.join(self.source_path_y, self.source_images_names[i]), cv2.IMREAD_GRAYSCALE)
 
-        # y_img = y_img[1:-1, 1:-1]
-        y_img = y_img / 255.0
-        return np.expand_dims(x_img, axis=0), np.expand_dims(y_img, axis=(0, -1))
+            x_img = cv2.resize(x_img, tuple(reversed(self.input_shape[:2])), interpolation=cv2.INTER_LINEAR)
+            y_img = cv2.resize(y_img, tuple(reversed(self.output_shape[:2])), interpolation=cv2.INTER_NEAREST)
+
+            x.append(x_img)
+            y.append(y_img)
+
+        x = np.array(x) / 255.0
+        y = np.expand_dims(y, axis=-1) / 255.0
+        return x, y
 
     def on_epoch_end(self):
         random.shuffle(self.source_images_names)

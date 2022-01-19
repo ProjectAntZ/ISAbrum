@@ -32,10 +32,15 @@ if __name__ == '__main__':
         # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         # frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
         roi = model.predict(np.expand_dims(frame, axis=0))[0]
-        roi = (roi / np.amax(roi) * 255.0).astype('uint8')
+        roi = (((roi - np.amin(roi)) / np.amax(roi)) * 255.0).astype('uint8')
+        roi = cv2.resize(roi, (frame.shape[1], frame.shape[0]))
+
+        a = np.where(roi != 0)
+        bbox = np.min(a[0]), np.max(a[0]), np.min(a[1]), np.max(a[1])
+
+        frame = cv2.rectangle(frame, bbox[0:2], bbox[2:4], (255, 0, 0), 2)
         cv2.imshow("video", frame)
-        # roi = cv2.resize(roi, (frame.shape[1], frame.shape[0]))
-        cv2.imshow("roi", roi)
+        # cv2.imshow("roi", roi)
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):

@@ -17,7 +17,7 @@ TARGET_PATH_Y = os.path.join(TARGET_PATH, "y")
 
 def dataset_thread(dir_list, index):
     gen = LDDetectionDatasetGenerator(
-        obj_path="objs/obj.png",
+        obj_path="objs",
         source_path=SOURCE_PATH,
         img_size=frameResolution,
         dir_list=dir_list
@@ -44,8 +44,8 @@ if __name__ == '__main__':
     source_list = os.listdir(SOURCE_PATH)
     # source_list = np.array(source_list).repeat(2).tolist()
 
-    slice_size = int(len(source_list) / (n_p ** 2))
-    slice_size = 500
+    # slice_size = int(len(source_list) / (n_p ** 2))
+    slice_size = 1000
 
     processes = []
     for n in range(n_p):
