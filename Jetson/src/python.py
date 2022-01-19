@@ -30,13 +30,12 @@ y = [0 for _ in range(SENSORS_NUMBER)]
 while True:
     msg = ser.readline().decode('ascii')
     if len(msg) > 0:
-        if 'Sensors: ' in msg:
-            s = int(re.search('Sensors: (\d+)', msg).group(1))
+        if 'Sensor: ' in msg:
+            s = int(re.search('Sensor: (\d+)', msg).group(1))
             d = int(re.search('Distance: (\d+)', msg).group(1))
             y[s] = d
             graph.show(y)
-        else:
-            print(msg)
+        print(msg)
     if keyboard.is_pressed('s'):
         ser.write(bytes('shoot\n', 'ascii'))
 
@@ -45,5 +44,7 @@ while True:
 
     if keyboard.is_pressed('q'):
         break
+
+    ser.read_all()
 
 ser.close()
