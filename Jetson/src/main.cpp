@@ -137,13 +137,13 @@ void loop()
             Serial.print("adjustLeft\n");
             targetFound = true; 
             
-            turn(-75);
+            turn(-80);
             directionChange = false;  
         }else if(msg=="adjustRight")
         {
             Serial.print("adjustRight\n");
             targetFound = true;
-            turn(75);
+            turn(80);
             directionChange = false;  
         }else if(msg=="targetEliminated")
         {
@@ -158,8 +158,8 @@ void loop()
 
     if(!targetFound)
     {
-        if (sonars.getShortestDistance() < 30) turn(100);
-        else if (sonars.getShortestDistance() > 40) forward(50);
+        if (sonars.getShortestDistance() < 25) turn(90);
+        else if (sonars.getShortestDistance() > 45) forward(60);
     }
     sonars.update();
 }

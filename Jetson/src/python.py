@@ -93,7 +93,8 @@ try:
         x = (box[2] + box[3]) // 2
         # y = (box[0] + box[1]) // 2
         cv2.imshow("roi", frame)
-        if p > 50.0:
+        if p > 50:
+            print("Target found:", p)
             if x > TARGET_WIDTH[1]:
                 ser.write(bytes('adjustRight\n', 'ascii'))
             elif x < TARGET_WIDTH[0]:
