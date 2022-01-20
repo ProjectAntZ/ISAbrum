@@ -21,9 +21,7 @@ def create_model():
     x = tf.keras.layers.Rescaling(1. / 255)(x)
     # x = tf.keras.layers.LayerNormalization(axis=3)(x)
 
-    '''x = tf.keras.layers.DepthwiseConv2D(depth_multiplier=3, kernel_size=(5, 5), padding='same', activation='relu')(x)
-    x = tf.keras.layers.DepthwiseConv2D(depth_multiplier=3, kernel_size=(5, 5), padding='same', activation='relu')(x)'''
-    size = [16, 32, 64, 128]
+    size = [8, 16, 32, 64]
     for i, s in enumerate(size):
         for _ in range(1):
             x = tf.keras.layers.Conv2D(filters=s, kernel_size=(3, 3), padding='same', activation='relu')(x)

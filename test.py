@@ -1,5 +1,6 @@
-import re
+from cv2 import cv2
 
-msg = "Sensors: 1; Distance: 234"
-match = re.search('Sensors: (\d+)', msg).group(1)
-print(match)
+img = cv2.imread("cat.jpg")
+print(img.shape)
+img = img[1:-1, 1:-1]
+print(img.shape)

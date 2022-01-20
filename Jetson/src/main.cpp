@@ -19,32 +19,47 @@
 // // Activated on LOW state 
 // // Linear actuator - blue to IN1, green to IN2
 
-float YawCalibrationCenter = 80.0f;
-float PitchCalibrationCenter = 58.0f;
+float YawCalibrationCenter = 71.0f;
+float PitchCalibrationCenter = 61.0f;
 const int relayIN1_pin = 6; //LEFT on module
 const int relayIN2_pin = 7; //RIGHT on module
 int defaultNotEnergized = HIGH;
 
-bool isTurn = false;
+bool directionChange = false;
+int lSpeed = 0;
+int rSpeed = 0;
+
+void Brake()
+{
+    lSpeed = 0;
+    rSpeed = 0;
+  MotorL_Brake();
+  MotorR_Brake();
+}
+
 void turn(int speed) {
-    if(!isTurn)
+    if(lSpeed != speed && rSpeed != -speed)
     {
         Brake();
         delay(500);
-        isTurn = true;
+        directionChange = true;
         MotorL_Move(speed);
         MotorR_Move(-speed);
+        lSpeed = speed;
+        rSpeed = -speed;
     }
 }
 
 void forward(int speed) {
-    if(isTurn)
+    if(lSpeed != speed && rSpeed != speed)
     {
         Brake();
         delay(500);
-        isTurn = false;
+        directionChange = false;
         MotorL_Move(speed);
         MotorR_Move(speed);
+        lSpeed = speed;
+        rSpeed = speed;
     }
 }
 
@@ -66,9 +81,9 @@ public:
         }
         
         if(darts>0) {
-            Serial.println("Shooting");
             nerfTrigger.shoot();
             darts-=1;
+            Serial.println("Pew Pew Darts left: " + String(darts));
         } else Serial.println("No darts");
     }
 
@@ -97,36 +112,54 @@ void setup()
 
     initServos();
     centerServos();
-
+    sonars.update();
     delay(500);
 }
 
 String msg;
-
+bool targetFound = true;
 void loop()
 {
     if(Serial.available()!=0) {
         msg = Serial.readStringUntil('\n');
 
-        Serial.println(msg);
-
+        Serial.print(msg);
+      //  Brake();
         if(msg == "shoot") {
+            Brake();
             trigger.shoot();
         }
         else if(msg == "reload") {
             trigger.reload();
         }
+        else if(msg=="adjustLeft")
+        {
+            Serial.print("adjustLeft\n");
+            targetFound = true; 
+            
+            turn(-75);
+            directionChange = false;  
+        }else if(msg=="adjustRight")
+        {
+            Serial.print("adjustRight\n");
+            targetFound = true;
+            turn(75);
+            directionChange = false;  
+        }else if(msg=="targetEliminated")
+        {
+            targetFound = false;
+        }else if(msg=="adjustBrake")
+        {
+            Brake();
+        }
 
-        // if(msg.indexOf("shoot")!=-1) {
-        //     trigger.shoot();
-        // }
-        // else if(msg.indexOf("reload")!=-1) {
-        //     trigger.reload();
-        // }
-        // Serial.flush();
+        Serial.flush();
     }
-    
+
+    if(!targetFound)
+    {
+        if (sonars.getShortestDistance() < 30) turn(100);
+        else if (sonars.getShortestDistance() > 40) forward(50);
+    }
     sonars.update();
-    if (sonars.getShortestDistance() < 30) turn(100);
-    else if (sonars.getShortestDistance() > 50) forward(70);
 }

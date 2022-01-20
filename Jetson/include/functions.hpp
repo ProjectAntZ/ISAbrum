@@ -24,13 +24,6 @@ void MotorR_Brake()
   digitalWrite(IN4,LOW); 
 }
 
-void Brake()
-{
-  MotorL_Brake();
-  MotorR_Brake();
-}
-
-
 void MotorL_Move(int level) 
 {
   if(level < 0)

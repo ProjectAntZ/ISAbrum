@@ -50,7 +50,7 @@ if __name__ == '__main__':
     # source_list = np.array(source_list).repeat(2).tolist()
 
     # slice_size = int(len(source_list)/(n_p*4))
-    slice_size = 1000
+    slice_size = 2000
     # dataset_thread(source_list[:slice_size], 1)
 
     processes = []
