@@ -4,4 +4,5 @@ modelLD
 __pycache__
 test
 .pio
+.vscode
 desktop.ini
