@@ -1,12 +1,19 @@
-import time
+from time import sleep
+import re
 
 import cv2
 import numpy as np
 import serial
 import tensorflow as tf
 from imutils.video import JetsonVideoStream, VideoStream
+from tqdm import trange
 
 MODEL_PATH = "modelCNN_poll"
+
+
+def wait(s):
+    for _ in trange(s - 1, bar_format='{n_fmt}/{total_fmt} seconds', initial=1, total=s):
+        sleep(1)
 
 
 def load_model(path):
@@ -58,12 +65,13 @@ class ObjFinder:
         maps = maps / np.amax(maps) * 255.0
         return maps.astype('uint8')
 
-    def get_bbox(self, image):
-        p = self.model.predict(np.expand_dims(image, axis=0))
+    def get_bbox(self, image, device='/gpu:0'):  # '/cpu:0'
+        with tf.device(device):
+            p = self.model.predict(np.expand_dims(image, axis=0))
         fmap = self.get_fmap(p[1][0])
         fmap = cv2.resize(fmap, self.input_shape, interpolation=cv2.INTER_NEAREST)
         # fmap = cv2.threshold(fmap, 200, 255, cv2.THRESH_BINARY)[1]
-        #cv2.imshow("fmap", fmap)
+        # cv2.imshow("fmap", fmap)
         box = get_bbox((fmap == np.amax(fmap)).astype('uint8'))
         return int(p[0][0][0] * 100.0), box
 
@@ -72,6 +80,7 @@ class Commander(serial.Serial):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.last_text = ""
+        self.flushInput()
 
     def send_ascii(self, text: str):
         if self.last_text != text:
@@ -82,40 +91,40 @@ class Commander(serial.Serial):
 SENSORS_NUMBER = 3
 
 ser = Commander(port='/dev/ttyACM0', baudrate=115200, timeout=0.05)
-# graph = RealtimeGraph(SENSORS_NUMBER)
-# graph.setScale(0, 200)
-# y = [0 for _ in range(SENSORS_NUMBER)]
+'''graph = RealtimeGraph(SENSORS_NUMBER)
+graph.setScale(0, 200)
+y = [0 for _ in range(SENSORS_NUMBER)]'''
 
 finder = ObjFinder(MODEL_PATH)
 vs = JetsonVideoStream(outputResolution=finder.input_shape)
 vs.start()
-time.sleep(2.0)
+wait(5)
 
 HALF_WIDTH = finder.input_shape[0] // 2
-TARGET_WIDTH = (HALF_WIDTH - 10, HALF_WIDTH // 2 + 20)
+TARGET_WIDTH = (HALF_WIDTH - 10, HALF_WIDTH + 20)
 
 try:
     while True:
         msg = ser.readlines()
         for m in msg:
             m = m.decode('ascii')
-            '''if 'Sensor: ' in msg:
-                s = int(re.search('Sensor: (\d+)', msg).group(1))
-                d = int(re.search('Distance: (\d+)', msg).group(1))
+            '''if 'Sensor: ' in m:
+                s = int(re.search('Sensor: (\d+)', m).group(1))
+                d = int(re.search('Distance: (\d+)', m).group(1))
                 y[s] = d
                 graph.show(y)'''
             print(m)
 
         frame = vs.read()
         frame = cv2.resize(frame, finder.input_shape)
-        #cv2.imshow("frame", frame)
-        p, box = finder.get_bbox(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        # cv2.imshow("frame", frame)
+        p, box = finder.get_bbox(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), device='/cpu:0')
         frame = cv2.rectangle(frame, (box[2], box[0]), (box[3], box[1]), (255, 0, 0), 2)
         frame = cv2.rectangle(frame, (TARGET_WIDTH[0], 0), (TARGET_WIDTH[1], finder.input_shape[1]), (0, 255, 0), 2)
         x = (box[2] + box[3]) // 2
         # y = (box[0] + box[1]) // 2
         cv2.imshow("roi", frame)
-        if p > 50:
+        if p > 70:
             print("Target found:", p)
             if x > TARGET_WIDTH[1]:
                 ser.send_ascii('right\n')
@@ -148,5 +157,5 @@ except KeyboardInterrupt:
     print('Interrupted')
 
 vs.stop()
-time.sleep(1.0)
+wait(1)
 ser.close()

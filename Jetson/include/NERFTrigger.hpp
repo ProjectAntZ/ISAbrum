@@ -103,7 +103,7 @@ class NERFTrigger
 
         void releaseRelays()
         {
-            Serial.println("Release");
+            //Serial.println("Release");
             //make sure, that the relay is turned OFF
             digitalWriteFast(relayIN1_pin, defaultNotEnergized);   
             digitalWriteFast(relayIN2_pin, defaultNotEnergized);
@@ -118,7 +118,7 @@ class NERFTrigger
         void extend() 
         {
             //extend (enegrize correct relays)
-            Serial.println("Extending");
+            //Serial.println("Extending");
             digitalWriteFast(relayIN1_pin, defaultEnergized ); 
             digitalWriteFast(relayIN2_pin, defaultNotEnergized );
             retractTimer.trigger(extendingTime);
@@ -127,7 +127,7 @@ class NERFTrigger
         void retract()
         {
             //retract (enegrize correct relays)
-            Serial.println("Retracting");
+            //Serial.println("Retracting");
             digitalWriteFast(relayIN1_pin, defaultNotEnergized); 
             digitalWriteFast(relayIN2_pin, defaultEnergized );
             releaseTimer.trigger(retractionTime);

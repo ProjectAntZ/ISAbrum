@@ -115,7 +115,7 @@ class ObjectDetectionDatasetGenerator(tf.keras.utils.Sequence):
             label = 1
             obj_img_copy = self.obj_img[random.randint(0, len(self.obj_img) - 1)].copy()
 
-            rotation = (random.randint(-10, 10), random.randint(-10, 10), random.randint(-15, 15))
+            rotation = (random.randint(-10, 10), random.randint(-10, 10), random.randint(-10, 10))
             scaling = (random.uniform(0.9, 1.2), random.uniform(0.9, 1.2), random.uniform(0.9, 1.2))
 
             obj_img_copy = _transform_object(obj_img_copy, rotation, scaling)

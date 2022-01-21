@@ -1,6 +1,11 @@
-from cv2 import cv2
+from time import sleep
 
-img = cv2.imread("cat.jpg")
-print(img.shape)
-img = img[1:-1, 1:-1]
-print(img.shape)
+from tqdm import trange
+
+
+def wait(s):
+    for _ in trange(s - 1, bar_format='{n_fmt}/{total_fmt} seconds', initial=1, total=s):
+        sleep(1)
+
+
+wait(5)

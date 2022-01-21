@@ -41,7 +41,6 @@ void turn(int speed) {
     {
         Brake();
         delay(500);
-        directionChange = true;
         MotorL_Move(speed);
         MotorR_Move(-speed);
         lSpeed = speed;
@@ -54,7 +53,6 @@ void forward(int speed) {
     {
         Brake();
         delay(500);
-        directionChange = false;
         MotorL_Move(speed);
         MotorR_Move(speed);
         lSpeed = speed;
