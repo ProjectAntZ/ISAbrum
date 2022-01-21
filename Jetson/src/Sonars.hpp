@@ -26,7 +26,7 @@ private:
   static void processPingResult(uint8_t sensor, int distanceInCm) {
       // The following code would be replaced with your code that does something with the ping result.
       distances[sensor] = distanceInCm;
-      Serial.println("Sensor: " + String(sensor) + "; Distance: " + String(distanceInCm));
+      Serial.println("Sensor: " + String(sensor) + "; Distance: " + String((distanceInCm != 0)?distanceInCm:MAX_DISTANCE));
   }
 
   static void echoCheck() {

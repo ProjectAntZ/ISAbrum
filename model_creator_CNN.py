@@ -19,24 +19,20 @@ frameResolution = (frameResolution[1], frameResolution[0])
 def create_model():
     x = input = tf.keras.layers.Input(shape=frameResolution + (3,))
     x = tf.keras.layers.Rescaling(1. / 255)(x)
-    # x = tf.keras.layers.LayerNormalization(axis=3)(x)
 
-    size = [8, 16, 32, 64]
+    size = [16, 32, 64, 128]
     for i, s in enumerate(size):
-        for _ in range(1):
-            x = tf.keras.layers.Conv2D(filters=s, kernel_size=(3, 3), padding='same', activation='relu')(x)
-            x = tf.keras.layers.BatchNormalization()(x)
         if i != len(size)-1:
-            x = tf.keras.layers.SpatialDropout2D(1. / 8)(x)
             x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(x)
-            x = tf.keras.layers.GaussianDropout(1. / 8)(x)
+
+        for _ in range(1):
+            x = tf.keras.layers.Conv2D(filters=s, kernel_size=(3, 3), strides=(1, 1), padding='same', activation='relu')(x)
+
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.SpatialDropout2D(1. / 8)(x)
+        x = tf.keras.layers.GaussianDropout(1. / 8)(x)
 
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
-    '''x = tf.keras.layers.Dropout(1. / 2)(x)
-    x = tf.keras.layers.Dense(
-        units=128,
-        activation='relu',
-    )(x)'''
     x = tf.keras.layers.Dropout(1. / 2)(x)
     x = tf.keras.layers.Dense(
         units=1,
@@ -45,6 +41,16 @@ def create_model():
 
     output = x
     model = tf.keras.Model(inputs=input, outputs=output, name="Hunter")
+    '''model = tf.keras.applications.mobilenet_v2(
+        input_shape=frameResolution + (3,),
+        alpha=1.0,
+        include_top=True,
+        weights=None,
+        input_tensor=None,
+        pooling='avg',
+        classes=1,
+        classifier_activation="sigmoid",
+    )'''
     model.summary()
     # tf.keras.utils.plot_model(model, to_file='/content/drive/MyDrive/Projects/autoHunter/model.png', show_shapes=True)
 
@@ -112,6 +118,6 @@ if __name__ == '__main__':
         x=train,
         # steps_per_epoch=1000,
         validation_data=test,
-        epochs=20,
+        epochs=50,
         callbacks=[checkpoint]
     )

@@ -36,7 +36,7 @@ def _add_noises(img, contrast, brightness, balance):
         if i == 0:
             img = cv2.blur(img, (random.randint(1, 3), random.randint(1, 3)))
         elif i == 1:
-            img = it.add_gaussian_noise(img, random.uniform(0.05, 0.2))
+            img = it.add_gaussian_noise(img, random.uniform(0.02, 0.2))
         elif i == 2:
             img = it.random_contrast(image=img, a=contrast[0], b=contrast[1])
         elif i == 3:
@@ -82,7 +82,7 @@ class ObjectDetectionDatasetGenerator(tf.keras.utils.Sequence):
         self.labels_dev = 2
         self.contrast = (0.7, 1.2)
         self.brightness = (0.7, 1.2)
-        self.scale = (0.25, 0.8)
+        self.scale = (0.4, 0.8)
         self.balance = (0.8, 1.2)
 
         self.log_path = log_path
@@ -127,20 +127,6 @@ class ObjectDetectionDatasetGenerator(tf.keras.utils.Sequence):
 
             if random.randint(0, 1) == 1:
                 random_image = cv2.flip(random_image, 1)
-
-        '''elif index % 5 == 1:
-            obj_img_copy = self.obj_img.copy()
-
-            if random.randint(0, 1) == 0:
-                obj_img_copy = cv2.rotate(obj_img_copy, cv2.ROTATE_90_CLOCKWISE)
-            else:
-                obj_img_copy = cv2.rotate(obj_img_copy, cv2.ROTATE_90_COUNTERCLOCKWISE)
-
-            rotation = (random.randint(-5, 5), random.randint(-5, 5), random.randint(-15, 15))
-            scaling = (random.uniform(0.9, 1.1), random.uniform(0.9, 1.1), random.uniform(0.9, 1.1))
-
-            obj_img_copy = _transform_object(obj_img_copy, rotation, scaling)
-            random_image = _add_object_to_image(obj=obj_img_copy, img=random_image, scale=self.scale)'''
 
         random_image = _add_noises(
             img=random_image,

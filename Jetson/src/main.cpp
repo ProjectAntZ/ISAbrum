@@ -25,7 +25,6 @@ const int relayIN1_pin = 6; //LEFT on module
 const int relayIN2_pin = 7; //RIGHT on module
 int defaultNotEnergized = HIGH;
 
-bool directionChange = false;
 int lSpeed = 0;
 int rSpeed = 0;
 
@@ -122,44 +121,50 @@ void loop()
 {
     if(Serial.available()!=0) {
         msg = Serial.readStringUntil('\n');
-
         Serial.print(msg);
-      //  Brake();
-        if(msg == "shoot") {
+        if(msg == "shoot")
+        {
             Brake();
             trigger.shoot();
         }
-        else if(msg == "reload") {
+        else if(msg == "reload")
+        {
             trigger.reload();
         }
-        else if(msg=="adjustLeft")
+        else if(msg=="left")
         {
-            Serial.print("adjustLeft\n");
-            targetFound = true; 
-            
+            targetFound = true;
             turn(-80);
-            directionChange = false;  
-        }else if(msg=="adjustRight")
+        }
+        else if(msg=="right")
         {
-            Serial.print("adjustRight\n");
             targetFound = true;
             turn(80);
-            directionChange = false;  
-        }else if(msg=="targetEliminated")
+        }
+        else if(msg=="eliminated")
         {
             targetFound = false;
-        }else if(msg=="adjustBrake")
+        }
+        else if(msg=="brake")
         {
             Brake();
         }
+        else if(msg=="forward")
+        {
+            forward(80);
+        }
+        else if(msg=="backward")
+        {
+            forward(-80);
+        }
 
-        Serial.flush();
+        // Serial.flush();
     }
 
     if(!targetFound)
     {
-        if (sonars.getShortestDistance() < 25) turn(90);
-        else if (sonars.getShortestDistance() > 45) forward(60);
+        if (sonars.getShortestDistance() < 30) turn(90);
+        else if (sonars.getShortestDistance() > 50) forward(60);
     }
     sonars.update();
 }

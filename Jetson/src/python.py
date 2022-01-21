@@ -6,7 +6,7 @@ import serial
 import tensorflow as tf
 from imutils.video import JetsonVideoStream, VideoStream
 
-MODEL_PATH = "modelCNN"
+MODEL_PATH = "modelCNN_poll"
 
 
 def load_model(path):
@@ -68,9 +68,20 @@ class ObjFinder:
         return int(p[0][0][0] * 100.0), box
 
 
+class Commander(serial.Serial):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.last_text = ""
+
+    def send_ascii(self, text: str):
+        if self.last_text != text:
+            self.last_text = text
+            ser.write(bytes(text, 'ascii'))
+
+
 SENSORS_NUMBER = 3
 
-ser = serial.Serial(port='/dev/ttyACM0', baudrate=115200, timeout=0.05)
+ser = Commander(port='/dev/ttyACM0', baudrate=115200, timeout=0.05)
 # graph = RealtimeGraph(SENSORS_NUMBER)
 # graph.setScale(0, 200)
 # y = [0 for _ in range(SENSORS_NUMBER)]
@@ -80,10 +91,21 @@ vs = JetsonVideoStream(outputResolution=finder.input_shape)
 vs.start()
 time.sleep(2.0)
 
-TARGET_WIDTH = (finder.input_shape[0] // 2 - 10, finder.input_shape[0] // 2 + 20)
+HALF_WIDTH = finder.input_shape[0] // 2
+TARGET_WIDTH = (HALF_WIDTH - 10, HALF_WIDTH // 2 + 20)
 
 try:
     while True:
+        msg = ser.readlines()
+        for m in msg:
+            m = m.decode('ascii')
+            '''if 'Sensor: ' in msg:
+                s = int(re.search('Sensor: (\d+)', msg).group(1))
+                d = int(re.search('Distance: (\d+)', msg).group(1))
+                y[s] = d
+                graph.show(y)'''
+            print(m)
+
         frame = vs.read()
         frame = cv2.resize(frame, finder.input_shape)
         #cv2.imshow("frame", frame)
@@ -96,30 +118,30 @@ try:
         if p > 50:
             print("Target found:", p)
             if x > TARGET_WIDTH[1]:
-                ser.write(bytes('adjustRight\n', 'ascii'))
+                ser.send_ascii('right\n')
             elif x < TARGET_WIDTH[0]:
-                ser.write(bytes('adjustLeft\n', 'ascii'))
+                ser.send_ascii('left\n')
             else:
-                ser.write(bytes('shoot\n', 'ascii'))
+                ser.send_ascii('shoot\n')
         else:
-            ser.write(bytes('targetEliminated\n', 'ascii'))
-
-        msg = ser.readlines()
-        for m in msg:
-            m = m.decode('ascii')
-            '''if 'Sensor: ' in msg:
-                s = int(re.search('Sensor: (\d+)', msg).group(1))
-                d = int(re.search('Distance: (\d+)', msg).group(1))
-                y[s] = d
-                graph.show(y)'''
-            print(m)
+            ser.send_ascii('eliminated\n')
 
         key = cv2.waitKey(1)
         if key != -1:
             if key == ord('s'):
-                ser.write(bytes('shoot\n', 'ascii'))
+                ser.send_ascii('shoot\n')
             elif key == ord('r'):
-                ser.write(bytes('reload\n', 'ascii'))
+                ser.send_ascii('reload\n')
+            elif key == ord('w'):
+                ser.send_ascii('forward\n')
+            elif key == ord('s'):
+                ser.send_ascii('backward\n')
+            elif key == ord('a'):
+                ser.send_ascii('left\n')
+            elif key == ord('d'):
+                ser.send_ascii('right\n')
+            elif key == ord('b'):
+                ser.send_ascii('brake\n')
             elif key == ord('q'):
                 break
 except KeyboardInterrupt:
