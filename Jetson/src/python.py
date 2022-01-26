@@ -8,7 +8,7 @@ import tensorflow as tf
 from imutils.video import JetsonVideoStream, VideoStream
 from tqdm import trange
 
-MODEL_PATH = "modelCNN_poll"
+MODEL_PATH = "modelCNN"
 
 
 def wait(s):
@@ -20,7 +20,7 @@ def load_model(path):
     model = tf.keras.models.load_model(path)
     model.summary()
 
-    last_conv = model.layers[-5].output
+    last_conv = model.layers[-4].output
     gp = model.layers[-3].output
     print(last_conv)
     print(gp)
@@ -98,10 +98,10 @@ y = [0 for _ in range(SENSORS_NUMBER)]'''
 finder = ObjFinder(MODEL_PATH)
 vs = JetsonVideoStream(outputResolution=finder.input_shape)
 vs.start()
-wait(5)
+wait(2)
 
 HALF_WIDTH = finder.input_shape[0] // 2
-TARGET_WIDTH = (HALF_WIDTH - 10, HALF_WIDTH + 20)
+TARGET_WIDTH = (HALF_WIDTH + 5, HALF_WIDTH + 20)
 
 try:
     while True:

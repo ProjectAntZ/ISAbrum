@@ -2,7 +2,7 @@
 #include "ISAMobile.h"
 
 #define SONAR_NUM      3 // Number of sensors.
-#define MAX_DISTANCE 100 // Maximum distance (in cm) to ping.
+#define MAX_DISTANCE 200 // Maximum distance (in cm) to ping.
 #define PING_INTERVAL 30 // Milliseconds between sensor pings (29ms is about the min to avoid cross-sensor echo).
 
 static NewPing sonar[SONAR_NUM] = {
@@ -25,8 +25,10 @@ class Sonars {
 private:
   static void processPingResult(uint8_t sensor, int distanceInCm) {
       // The following code would be replaced with your code that does something with the ping result.
-      distances[sensor] = distanceInCm;
-      Serial.println("Sensor: " + String(sensor) + "; Distance: " + String((distanceInCm != 0)?distanceInCm:MAX_DISTANCE));
+      if (distanceInCm != 0) {
+        distances[sensor] = distanceInCm;
+        Serial.println("Sensor: " + String(sensor) + "; Distance: " + String(distanceInCm));
+      }
   }
 
   static void echoCheck() {

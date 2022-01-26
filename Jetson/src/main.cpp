@@ -132,12 +132,12 @@ void loop()
         else if(msg=="left")
         {
             targetFound = true;
-            turn(-80);
+            turn(-90);
         }
         else if(msg=="right")
         {
             targetFound = true;
-            turn(80);
+            turn(90);
         }
         else if(msg=="eliminated")
         {
@@ -161,8 +161,8 @@ void loop()
 
     if(!targetFound)
     {
-        if (sonars.getShortestDistance() < 30) turn(90);
-        else if (sonars.getShortestDistance() > 50) forward(60);
+        if (sonars.getShortestDistance() < 30) turn(100);
+        else if (sonars.getShortestDistance() > 80) forward(70);
     }
     sonars.update();
 }

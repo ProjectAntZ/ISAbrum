@@ -1,6 +1,7 @@
 import os
 
 import tensorflow as tf
+from tensorflow.keras import layers, activations
 
 '''if tf.__version__ != "2.6.0":
     print("tf.__version__ != 2.6.0")
@@ -17,24 +18,24 @@ frameResolution = (frameResolution[1], frameResolution[0])
 
 
 def create_model():
-    x = input = tf.keras.layers.Input(shape=frameResolution + (3,))
-    x = tf.keras.layers.Rescaling(1. / 255)(x)
+    x = input = layers.Input(shape=frameResolution + (3,))
+    x = layers.Rescaling(1. / 255)(x)
 
     size = [16, 32, 64, 128]
     for i, s in enumerate(size):
-        if i != len(size)-1:
-            x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(x)
-
         for _ in range(1):
-            x = tf.keras.layers.Conv2D(filters=s, kernel_size=(3, 3), strides=(1, 1), padding='same', activation='relu')(x)
+            x = layers.Conv2D(filters=s, kernel_size=(3, 3), strides=(1, 1), padding='same', activation='relu')(x)
 
-        x = tf.keras.layers.BatchNormalization()(x)
-        x = tf.keras.layers.SpatialDropout2D(1. / 8)(x)
-        x = tf.keras.layers.GaussianDropout(1. / 8)(x)
+        if i != len(size)-1:
+            x = layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(x)
 
-    x = tf.keras.layers.GlobalAveragePooling2D()(x)
-    x = tf.keras.layers.Dropout(1. / 2)(x)
-    x = tf.keras.layers.Dense(
+        x = layers.BatchNormalization()(x)
+        x = layers.SpatialDropout2D(1. / 8)(x)
+        x = layers.GaussianDropout(1. / 8)(x)
+
+    x = layers.GlobalAveragePooling2D()(x)
+    x = layers.Dropout(1. / 2)(x)
+    x = layers.Dense(
         units=1,
         activation='sigmoid',
     )(x)
