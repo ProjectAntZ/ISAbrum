@@ -6,6 +6,7 @@
 #include <Encoder.h>
 #include <Axle.hpp>
 #include "Sonars.hpp"
+#include "Odometry.hpp"
 
 
 // // Moduł przekaźników Iduino 2 kanały z optoizolacją - styki 10A/250VAC - cewka 5V
@@ -92,11 +93,13 @@ public:
 
 NERF trigger;
 Sonars sonars;
+Odometry odometry;
 
 void setup()
 {
     // Use to check for any errors in using timers
     // TeensyTimerTool::attachErrFunc(TeensyTimerTool::ErrorHandler(Serial));
+    odometry.Initialize();
 
     initSerial(115200);
     delay(3000);
@@ -111,6 +114,29 @@ void setup()
     centerServos();
     sonars.update();
     delay(500);
+}
+
+void turnBy(float rad, unsigned int speed) {
+    float x, y, theta;
+    odometry.ResetPosition();
+    
+    if (rad < 0.0) 
+    {
+        rad = rad < 0 ? 2 * M_PI + rad : rad;
+        turn(speed);
+        do {
+            std::tie(x, y, theta) = odometry.GetPosition();
+        } while (theta < rad);
+    }
+    else if (rad > 0.0) 
+    {
+        rad = rad < 0 ? 2 * M_PI + rad : rad;
+        turn(-speed);
+        do {
+            std::tie(x, y, theta) = odometry.GetPosition();
+        } while (theta > rad || theta == 0.0);
+    }
+    Brake();
 }
 
 String msg;
@@ -129,15 +155,23 @@ void loop()
         {
             trigger.reload();
         }
-        else if(msg=="left")
+        else if(msg.startsWith("adjust"))
         {
-            targetFound = true;
-            turn(-90);
+            Brake();
+            float rad = msg.replace("adjust", "").toFloat();
+            Serial.print(rad);
+            Serial.print("RADIANS");
+            turnBy(rad, 100);
         }
-        else if(msg=="right")
+        else if(msg == "left")
         {
             targetFound = true;
-            turn(90);
+            turn(-100);
+        }
+        else if(msg == "right")
+        {
+            targetFound = true;
+            turn(100);
         }
         else if(msg=="eliminated")
         {
@@ -161,8 +195,9 @@ void loop()
 
     if(!targetFound)
     {
-        if (sonars.getShortestDistance() < 30) turn(100);
-        else if (sonars.getShortestDistance() > 80) forward(70);
+        distance_t distance = sonars.getShortestDistance();
+        if (distance.val < 30) turn(100);
+        else if (distance.val > 60) forward(70);
     }
     sonars.update();
 }

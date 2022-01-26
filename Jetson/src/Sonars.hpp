@@ -19,7 +19,13 @@ static NewPing sonar[SONAR_NUM] = {
 
 static unsigned long pingTimer[SONAR_NUM]; // Holds the times when the next ping should happen for each sensor.
 static unsigned int distances[SONAR_NUM];  // Where the ping distances are stored.
-static uint8_t currentSensor;          // Keeps track of which sensor is active.
+static uint8_t currentSensor;  // Keeps track of which sensor is active.
+struct distance_t {
+    int id = -1;
+    unsigned int val;
+};
+distance_t distance;
+
 
 class Sonars {
 private:
@@ -56,11 +62,14 @@ public:
     }
   }
 
-  unsigned int getShortestDistance() {
-    unsigned int shortestDistance = 1000000000;
+  distance_t getShortestDistance() {
+    distance.val = 100000000;
     for (uint8_t i = 0; i < SONAR_NUM; i++) {
-      if (shortestDistance > distances[i]) shortestDistance = distances[i];
+      if (distance.val > distances[i]) {
+        distance.val = distances[i];
+        distance.id = i;
+      }
     }
-    return shortestDistance;
+    return distance;
   }
 };
