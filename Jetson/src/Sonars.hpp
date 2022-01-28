@@ -20,11 +20,6 @@ static NewPing sonar[SONAR_NUM] = {
 static unsigned long pingTimer[SONAR_NUM]; // Holds the times when the next ping should happen for each sensor.
 static unsigned int distances[SONAR_NUM];  // Where the ping distances are stored.
 static uint8_t currentSensor;  // Keeps track of which sensor is active.
-struct distance_t {
-    int id = -1;
-    unsigned int val;
-};
-distance_t distance;
 
 
 class Sonars {
@@ -33,7 +28,7 @@ private:
       // The following code would be replaced with your code that does something with the ping result.
       if (distanceInCm != 0) {
         distances[sensor] = distanceInCm;
-        Serial.println("Sensor: " + String(sensor) + "; Distance: " + String(distanceInCm));
+        // Serial.print("Sensor (" + String(sensor) + ", " + String(distanceInCm) + ")");
       }
   }
 
@@ -62,14 +57,14 @@ public:
     }
   }
 
-  distance_t getShortestDistance() {
-    distance.val = 100000000;
+  unsigned int getShortestDistance() {
+    unsigned int distance = 100000000;
     for (uint8_t i = 0; i < SONAR_NUM; i++) {
-      if (distance.val > distances[i]) {
-        distance.val = distances[i];
-        distance.id = i;
+      if (distance > distances[i]) {
+        distance = distances[i];
       }
     }
+    Serial.printf("Sonars (%d, %d, %d)\n", distances[0], distances[1], distances[2]);
     return distance;
   }
 };

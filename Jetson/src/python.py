@@ -1,3 +1,5 @@
+import math
+import struct
 from time import sleep
 import re
 
@@ -83,7 +85,7 @@ class Commander(serial.Serial):
         self.flushInput()
 
     def send_ascii(self, text: str):
-        if self.last_text != text:
+        if self.last_text != text or True:
             self.last_text = text
             ser.write(bytes(text, 'ascii'))
 
@@ -102,18 +104,19 @@ wait(2)
 
 HALF_WIDTH = finder.input_shape[0] // 2
 TARGET_WIDTH = (HALF_WIDTH + 5, HALF_WIDTH + 20)
+MIDDLE = (TARGET_WIDTH[0] + TARGET_WIDTH[1]) / 2.0
+ADJUST_TIMES = (0.1, 1.0)
+
+target_found = False
 
 try:
     while True:
-        msg = ser.readlines()
+        if ser.in_waiting:
+            print(ser.readall())
+        '''msg = ser.readlines()
         for m in msg:
             m = m.decode('ascii')
-            '''if 'Sensor: ' in m:
-                s = int(re.search('Sensor: (\d+)', m).group(1))
-                d = int(re.search('Distance: (\d+)', m).group(1))
-                y[s] = d
-                graph.show(y)'''
-            print(m)
+            print(m)'''
 
         frame = vs.read()
         frame = cv2.resize(frame, finder.input_shape)
@@ -124,16 +127,25 @@ try:
         x = (box[2] + box[3]) // 2
         # y = (box[0] + box[1]) // 2
         cv2.imshow("roi", frame)
-        if p > 70:
+        if p > 70 or target_found is True:
             print("Target found:", p)
-            if x > TARGET_WIDTH[1]:
-                ser.send_ascii('right\n')
-            elif x < TARGET_WIDTH[0]:
-                ser.send_ascii('left\n')
+            if x > TARGET_WIDTH[1] or x < TARGET_WIDTH[0]:
+                ser.send_ascii('adjust\n')
+                pos = x - MIDDLE  # 62.2 x 48.8 degrees
+
+                sec = ADJUST_TIMES[1] * (MIDDLE / pos)
+                if -ADJUST_TIMES[0] < sec < ADJUST_TIMES[1]:
+                    sec = ADJUST_TIMES[0]
+
+                ser.write(struct.pack('<f', sec))
+                while True:
+                    m = ser.readline().decode('ascii')
+                    print(m)
+                    if "finished" in m:
+                        break
             else:
                 ser.send_ascii('shoot\n')
-        else:
-            ser.send_ascii('eliminated\n')
+                target_found = False
 
         key = cv2.waitKey(1)
         if key != -1:
@@ -153,9 +165,9 @@ try:
                 ser.send_ascii('brake\n')
             elif key == ord('q'):
                 break
-except KeyboardInterrupt:
-    print('Interrupted')
+except Exception as e:
+    print(e)
 
 vs.stop()
-wait(1)
+wait(2)
 ser.close()

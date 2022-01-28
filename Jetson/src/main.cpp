@@ -6,7 +6,6 @@
 #include <Encoder.h>
 #include <Axle.hpp>
 #include "Sonars.hpp"
-#include "Odometry.hpp"
 
 
 // // Moduł przekaźników Iduino 2 kanały z optoizolacją - styki 10A/250VAC - cewka 5V
@@ -93,14 +92,9 @@ public:
 
 NERF trigger;
 Sonars sonars;
-Odometry odometry;
 
 void setup()
 {
-    // Use to check for any errors in using timers
-    // TeensyTimerTool::attachErrFunc(TeensyTimerTool::ErrorHandler(Serial));
-    odometry.Initialize();
-
     initSerial(115200);
     delay(3000);
 
@@ -116,31 +110,19 @@ void setup()
     delay(500);
 }
 
-void turnBy(float rad, unsigned int speed) {
-    float x, y, theta;
-    odometry.ResetPosition();
-    
-    if (rad < 0.0) 
+void turnBy(float sec, int speed) {
+    if (sec < 0)
     {
-        rad = rad < 0 ? 2 * M_PI + rad : rad;
-        turn(speed);
-        do {
-            std::tie(x, y, theta) = odometry.GetPosition();
-        } while (theta < rad);
-    }
-    else if (rad > 0.0) 
-    {
-        rad = rad < 0 ? 2 * M_PI + rad : rad;
         turn(-speed);
-        do {
-            std::tie(x, y, theta) = odometry.GetPosition();
-        } while (theta > rad || theta == 0.0);
+        sec = -sec;
     }
+    else turn(speed);
+    delay(sec * 1000);
     Brake();
 }
 
 String msg;
-bool targetFound = true;
+bool targetFound = false;
 void loop()
 {
     if(Serial.available()!=0) {
@@ -150,18 +132,18 @@ void loop()
         {
             Brake();
             trigger.shoot();
+            targetFound = false;
         }
         else if(msg == "reload")
         {
             trigger.reload();
         }
-        else if(msg.startsWith("adjust"))
+        else if(msg == "adjust")
         {
             Brake();
-            float rad = msg.replace("adjust", "").toFloat();
-            Serial.print(rad);
-            Serial.print("RADIANS");
-            turnBy(rad, 100);
+            float sec;
+            Serial.readBytes((char*)&sec, 4);
+            turnBy(sec, 100);
         }
         else if(msg == "left")
         {
@@ -189,15 +171,15 @@ void loop()
         {
             forward(-80);
         }
-
+        Serial.println("finished");
         // Serial.flush();
     }
 
     if(!targetFound)
     {
-        distance_t distance = sonars.getShortestDistance();
-        if (distance.val < 30) turn(100);
-        else if (distance.val > 60) forward(70);
+        unsigned int distance = sonars.getShortestDistance();
+        if (distance < 30) turn(100);
+        else if (distance > 60) forward(70);
     }
     sonars.update();
 }
