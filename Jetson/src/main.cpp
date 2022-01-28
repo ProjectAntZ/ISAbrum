@@ -66,7 +66,7 @@ private:
     int darts;
 public:
     NERF() {
-        nerfTrigger = NERFTrigger(relayIN1_pin, relayIN2_pin, std::chrono::milliseconds(3000));
+        nerfTrigger = NERFTrigger(relayIN1_pin, relayIN2_pin, std::chrono::milliseconds(2000));
         nerfTrigger.initialize();
         reload();
     }

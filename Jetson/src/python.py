@@ -112,7 +112,7 @@ target_found = False
 try:
     while True:
         if ser.in_waiting:
-            print(ser.readall())
+            print(ser.readall().decode('ascii'))
         '''msg = ser.readlines()
         for m in msg:
             m = m.decode('ascii')
@@ -127,15 +127,20 @@ try:
         x = (box[2] + box[3]) // 2
         # y = (box[0] + box[1]) // 2
         cv2.imshow("roi", frame)
+        
         if p > 70 or target_found is True:
+            target_found = True
             print("Target found:", p)
             if x > TARGET_WIDTH[1] or x < TARGET_WIDTH[0]:
                 ser.send_ascii('adjust\n')
                 pos = x - MIDDLE  # 62.2 x 48.8 degrees
 
-                sec = ADJUST_TIMES[1] * (MIDDLE / pos)
-                if -ADJUST_TIMES[0] < sec < ADJUST_TIMES[1]:
-                    sec = ADJUST_TIMES[0]
+                sec = ADJUST_TIMES[1] * (pos / MIDDLE)
+                if abs(sec) < ADJUST_TIMES[0]:
+                    if sec > 0.0:
+                        sec = ADJUST_TIMES[0]
+                    else:
+                        sec = -ADJUST_TIMES[0]
 
                 ser.write(struct.pack('<f', sec))
                 while True:
